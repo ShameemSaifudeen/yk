@@ -40,8 +40,13 @@
 
 
 <div class="">
-    <button class="cart-item-count mr-3 small" onclick="changeQuantity('<%-cartItems._id%>','<%-cartItems.cartItems._id%>',-1)">-</button> <%=cartItems.quantity%> <button class="cart-item-count mr-3 small" onclick="changeQuantity('<%-cartItems._id%>','<%-cartItems.cartItems._id%>',1)">+</button>
-                                               
+    <button style="min-width:26;" class="btn btn-decrement btn-spinner"  id="decrement" onclick="changeQuantity('<%-cartItems._id%>','<%-cartItems.item%>',-1,)" type="button">
+        <i class="icon-minus"></i>
+      </button>
+      <input type="text" disabled="disabled" style="text-align:center;" class="border-0 form-control" value="<%-cartItems.quantity%>" min="1" step="1" data-decimals="0">
+      <button id="plusBtn" style="min-width:26;" class="btn btn-increment btn-spinner" onclick="changeQuantity('<%-cartItems._id%>','<%-cartItems.item%>',1,)" type="button">
+        <i class="icon-plus"></i>
+      </button>       
                                             </div>
                                         </td>
                                         <td class="text-right" cartItemss-title="cartItems">
@@ -133,6 +138,10 @@
 </section>
 <script>
      function changeQuantity(cartId, prodId, count){
+        console.log(cartId);
+        console.log(prodId);
+        console.log(count);
+
         let quantity = parseInt(document.getElementById(prodId).innerHTML)
         count=parseInt(count)
 

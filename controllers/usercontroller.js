@@ -179,6 +179,7 @@ module.exports = {
    
   },
   postchangeProductQuantity:async(req,res)=>{
+    console.log(req);
     let count=await userhelpers.getCartItemsCount(req.session.user.id)
     console.log(req.body);
     await userhelpers.changeProductQuantity(req.body).then((data)=>{
