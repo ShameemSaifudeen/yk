@@ -90,14 +90,19 @@ module.exports = {
   postCategory: (req, res) => {
     console.log(req.body.categoryname);
     adminHelper.addCategory(req.body).then((data) => {
+      
       var categoryStatus = data.categoryStatus
       if (categoryStatus == false) {
 
       res.redirect('/admin/add_category');
         
       } else {
+        
 
-        res.render('admin/add-category', { layout: "adminLayout", adminStatus,viewCategory,categoryStatus })
+        adminHelper.viewAddCategory().then((response) => {
+          viewCategory = response
+          res.render("admin/add-category", { layout: "adminLayout", adminStatus, viewCategory, categoryStatus});
+        })
       }
 
     })

@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const { response } = require("../app");
 const ObjectId = require('mongodb').ObjectId
 
+
 const otp = require('../otp/otp')
 
 const client = require('twilio')(otp.accountId, otp.authToken)
@@ -134,11 +135,6 @@ module.exports = {
               {
                 "cartItems": proObj
 
-
-
-
-
-
               }
             }).then((response) => {
 
@@ -173,7 +169,7 @@ module.exports = {
   },
   viewCart: (userId) => {
 
-    console.log(userId);
+    console.log(userId+"view");
     return new Promise(async (resolve, reject) => {
 
 
@@ -242,14 +238,124 @@ module.exports = {
   changeProductQuantity: (data) => {
     console.log(data);
     count = parseInt(data.count)
+    quantity=parseInt(data.quantity)
     return new Promise((resolve, reject) => {
+    if(count==-1 && quantity==1){
+      console.log("ifhi");
+      user.cart.updateOne({ '_id':data.cart  }, {
+        $pull:{cartItems:{productId:data.product}}
+      }).then(()=>{
+        resolve({removeProduct:true})
 
-      db.cart.updateOne({ '_id': data.cart, 'cartItems.productId': data.cartItems }, {
-        $inc: { 'cartItems.$.quantity': count }
-      }).then(() => {
-        resolve({ status: "success" })
       })
+
+    }
+    else{
+      console.log("else hi");
+      user.cart.updateOne({ '_id':data.cart , 'cartItems.productId': data.product }, {
+        $inc: { 'cartItems.$.Quantity': count }
+      }).then(() => {
+        resolve(true)
+      })
+    }
+
+
+
+
+    
+
+      
     })
 
 
-  },}
+  },
+  totalCheckOutAmount: (userId) => {
+
+    return new Promise(async (resolve, reject) => {
+
+
+      const id = await user.cart.aggregate([
+        {
+          $match: {
+            user: ObjectId(userId)
+          }
+        },
+        {
+          $unwind: '$cartItems'
+        },
+
+
+        {
+          $project: {
+            item: '$cartItems.productId',
+            quantity: '$cartItems.Quantity'
+          }
+        },
+
+
+        {
+          $lookup: {
+            from: 'products',
+            localField: "item",
+            foreignField: "_id",
+            as: 'carted'
+          }
+        },
+        {
+          $project:{
+           item:1,quantity:1,product:{$arrayElemAt:['$carted',0]}
+          }
+        
+        },
+        {
+          $group: {
+              _id: null,
+            total: { $sum: { $multiply: ["$quantity", "$product.Price"] } }
+          }
+      }
+      ]).then((total) => {
+        
+ 
+
+        resolve(total[0]?.total)
+
+
+      })
+
+    })
+
+  },
+  deleteCart: (data) => {
+    return new Promise((resolve, reject) => {
+        
+            user.cart.updateOne({ '_id': data.cartId },
+                {
+                    "$pull":{cartItems:{productId:data.product}}
+                }
+            ).then(() => {
+                resolve({ removeProduct: true })
+            })
+       
+    })
+  }
+
+
+  // deleteCart:(prodId)=>{
+  //   return new Promise(async(resolve, reject) => {
+  //     await user.cart.updateOne({ '_id':prodId  }, {
+  //       $pull:{cartItems:{productId:}}
+  //     }).then(()=>{
+  //       resolve({removeProduct:true})
+
+  //     })
+  //   })
+
+  // },
+
+
+
+
+
+
+
+}

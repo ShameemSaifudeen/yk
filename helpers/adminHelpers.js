@@ -45,13 +45,14 @@ module.exports = {
     let response = {};
 
         return new Promise(async(resolve, reject) => {
-        let category = data.category;
-        existingCategory = await user.categories.findOne({ category })
+        let category = data.categoryname;
+        existingCategory = await user.categories.findOne({ categoryName:category })
         if (existingCategory) {
+            console.log("category exists");
           response = { categoryStatus: true }
           resolve(response)}
           else{
-
+console.log("category not exist");
               const categoryData =new user.categories({
              
                  categoryName:data.categoryname
