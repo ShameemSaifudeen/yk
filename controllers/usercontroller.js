@@ -1,33 +1,33 @@
 const userhelpers = require('../helpers/userhelpers')
 const user = require('../models/connection')
 const otp = require('../otp/otp')
-const ObjectId=require('mongodb').ObjectId
+const ObjectId = require('mongodb').ObjectId
 const adminHelper = require('../helpers/adminHelpers')
 
 
 const client = require('twilio')(otp.accountId, otp.authToken)
 
-let userSession, number, loggedUser,loggedUserId;
+let userSession, number, loggedUser, loggedUserId;
 let count
 
 module.exports = {
 
-  getHome:async(req, res) => {
+  getHome: async (req, res) => {
     userSession = req.session.userLoggedIn
-    if(req.session.userLoggedIn){
-     count=await userhelpers.getCartItemsCount(req.session.user.id)
-     res.render('user/user', { userSession,count })
+    if (req.session.userLoggedIn) {
+      count = await userhelpers.getCartItemsCount(req.session.user.id)
+      res.render('user/user', { userSession, count })
     }
-    else{
-      res.render('user/user', { userSession})
+    else {
+      res.render('user/user', { userSession })
     }
   },
-  getUserLogin: async(req, res) => {
-    count=await userhelpers.getCartItemsCount(req.session.user.id)
-    
+  getUserLogin: async (req, res) => {
+    count = await userhelpers.getCartItemsCount(req.session.user.id)
+
     userSession = req.session.userLoggedIn
 
-    res.render("user/user", { userSession,count });
+    res.render("user/user", { userSession, count });
   },
   getUserOtpLogin: (req, res) => {
 
@@ -78,8 +78,8 @@ module.exports = {
         console.log(verification_check);
         if (verification_check.valid == true) {
           req.session.user = loggedUser
-          req.session.user.id=loggedUser._id
-          loggedUserId=loggedUser._id
+          req.session.user.id = loggedUser._id
+          loggedUserId = loggedUser._id
           console.log(loggedUser);
           console.log("otphi");
           req.session.userLoggedIn = true;
@@ -141,78 +141,82 @@ module.exports = {
 
     })
   },
-  getShop: async(req, res) => {
+  getShop: async (req, res) => {
     console.log(req.session.user.id);
-    
-    count=await userhelpers.getCartItemsCount(req.session.user.id)
-    viewCategory=await adminHelper.viewAddCategory()
+
+    count = await userhelpers.getCartItemsCount(req.session.user.id)
+    viewCategory = await adminHelper.viewAddCategory()
 
     userhelpers.shopListProduct().then((response) => {
       // console.log(response);
-      res.render('user/shop', { response, userSession,count,viewCategory })
+      res.render('user/shop', { response, userSession, count, viewCategory })
     })
 
 
   },
 
-  getProductDetails: async(req, res) => {
-    count=await userhelpers.getCartItemsCount(req.session.user.id)
+  getProductDetails: async (req, res) => {
+    count = await userhelpers.getCartItemsCount(req.session.user.id)
 
     console.log(req.params.id);
     userhelpers.productDetails(req.params.id).then((data) => {
       console.log(data);
-      res.render('user/eachproduct',{data,count})
+      res.render('user/eachproduct', { data, count })
     })
   },
 
-  getAddToCart: (req, res) =>{
+  getAddToCart: (req, res) => {
     console.log(req.params.id);
     console.log(req.session.user.id);
 
-    userhelpers.addToCart(req.params.id,req.session.user.id).then((data)=>{
+    userhelpers.addToCart(req.params.id, req.session.user.id).then((data) => {
       console.log(data);
-      res.json({status:true})
+      res.json({ status: true })
     })
 
   },
 
 
 
-  getViewCart: async(req, res) =>{
+  getViewCart: async (req, res) => {
     console.log(req);
-let total=await userhelpers.totalCheckOutAmount(req.session.user.id)
-    let count=await userhelpers.getCartItemsCount(req.session.user.id)
+    let userId=req.session.user
+    let total = await userhelpers.totalCheckOutAmount(req.session.user.id)
+    let count = await userhelpers.getCartItemsCount(req.session.user.id)
 
-    let cartItems= await userhelpers.viewCart(req.session.user.id)
-  
-    res.render('user/view-cart',{cartItems,userSession,count,total})
-   
+    let cartItems = await userhelpers.viewCart(req.session.user.id)
+    // console.log(cartItems);
+
+    res.render('user/view-cart', { cartItems,userId, userSession, count, total })
+
   },
-  postchangeProductQuantity:async(req,res)=>{
+  postchangeProductQuantity: async (req, res) => {
     // let count=await userhelpers.getCartItemsCount(req.session.user.id)
-    console.log(req.body);
-    await userhelpers.changeProductQuantity(req.body).then((response)=>{
+    // console.log(req.body);
+    await userhelpers.changeProductQuantity(req.body).then(async(response) => {
       console.log("hhhhhhhhhhhhhhhhhhhh");
-      console.log(response+"controllers");
+      console.log(response + "controllers");
+    response.total=await userhelpers.totalCheckOutAmount(req.body.user)
+
       res.json(response)
-      
+
 
     })
 
-    
+
   },
 
 
-  getDeleteCart:(req,res)=>{
+  getDeleteCart: (req, res) => {
     console.log(req.body);
-userhelpers.deleteCart(req.body).then((response) => {
-  res.json(response)
-})
+    userhelpers.deleteCart(req.body).then((response) => {
+      res.json(response)
+    })
   }
-,
-getProceedToCheckOut:(req,res)=>{
+  ,
+  getProceedToCheckOut: (req, res) => {
 
-},
+  },
 
 
 

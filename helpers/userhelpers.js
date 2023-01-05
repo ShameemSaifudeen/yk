@@ -186,6 +186,7 @@ module.exports = {
 
         {
           $project: {
+    
             item: '$cartItems.productId',
             quantity: '$cartItems.Quantity'
           }
@@ -255,7 +256,7 @@ module.exports = {
       user.cart.updateOne({ '_id':data.cart , 'cartItems.productId': data.product }, {
         $inc: { 'cartItems.$.Quantity': count }
       }).then(() => {
-        resolve(true)
+        resolve({status:true})
       })
     }
 
