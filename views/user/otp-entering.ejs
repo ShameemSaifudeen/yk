@@ -21,6 +21,11 @@
                       <div class="heading_s1">
                         <h5 class="mb-30">OTP</h5>
                       </div>
+                      <%if (locals.otpStatus==false){%>
+                        <p class="message" style="color: red">
+                          Please Enter Correct OTP
+                        </p>
+                    <%}%>
                       <form action="/otp_verify" method="post">
                         <div class="form-group">
                           <input
@@ -54,3 +59,8 @@
    
    
   </section>
+  <script>
+    setTimeout(function () {
+      document.querySelector(".message").style.display = "none";
+    }, 2000);
+  </script>

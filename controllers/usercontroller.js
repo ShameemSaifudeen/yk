@@ -1,14 +1,15 @@
 const userhelpers = require('../helpers/userhelpers')
 const user = require('../models/connection')
-const otp = require('../otp/otp')
+const otp = require('../thirdparty/otp')
 const ObjectId = require('mongodb').ObjectId
 const adminHelper = require('../helpers/adminHelpers')
 
 
 const client = require('twilio')(otp.accountId, otp.authToken)
 
-let userSession, number, loggedUser, loggedUserId;
-let count
+let userSession, number, loggedUser, loggedUserId, homeList;
+let count, numberStatus, otpStatus
+
 
 module.exports = {
 
@@ -16,10 +17,13 @@ module.exports = {
     userSession = req.session.userLoggedIn
     if (req.session.userLoggedIn) {
       count = await userhelpers.getCartItemsCount(req.session.user.id)
-      res.render('user/user', { userSession, count })
+      homeList = await userhelpers.shopListProduct()
+      res.render('user/user', { userSession, count, homeList })
     }
     else {
-      res.render('user/user', { userSession })
+      homeList = await userhelpers.shopListProduct()
+
+      res.render('user/user', { userSession, homeList })
     }
   },
   getUserLogin: async (req, res) => {
@@ -27,24 +31,28 @@ module.exports = {
 
     userSession = req.session.userLoggedIn
 
-    res.render("user/user", { userSession, count });
+    res.render("user/user", { userSession, count, homeList });
   },
   getUserOtpLogin: (req, res) => {
 
-
-    res.render("user/otplogin", { userSession });
+    numberStatus = true
+    res.render("user/otplogin", { userSession, numberStatus });
   },
   postUserOtpLogin: async (req, res) => {
     console.log(req.body.number);
 
     number = req.body.number;
     let users = await user.user.find({ phonenumber: number }).exec()
+    console.log(users._id + "itshere");
+
     loggedUser = users
-    console.log(users);
+
     if (users == false) {
       console.log("falsehi");
-      res.redirect('/login')
+      numberStatus = false
+      res.render("user/otplogin", { userSession, numberStatus })
     } else {
+
       client.verify.v2
         .services(otp.serviceId)
         .verifications.create({ to: `+91 ${number}`, channel: "sms" })
@@ -57,7 +65,8 @@ module.exports = {
           })
 
         })
-      res.render('user/otp-entering')
+      otpStatus = true
+      res.render('user/otp-entering', { otpStatus })
 
     }
 
@@ -67,8 +76,10 @@ module.exports = {
   },
 
   postOtpVerify: (req, res) => {
-    console.log(req.body);
+
     otpNumber = req.body.otp
+
+
 
     client.verify.v2
       .services(otp.serviceId)
@@ -77,22 +88,27 @@ module.exports = {
         console.log(verification_check.status);
         console.log(verification_check);
         if (verification_check.valid == true) {
-          req.session.user = loggedUser
-          req.session.user.id = loggedUser._id
-          loggedUserId = loggedUser._id
+          console.log("hellllllllllllllllo");
+          console.log(loggedUser);
+          console.log(ObjectId(loggedUser[0]._id));
+
+          let id = loggedUser[0]._id
+
+          req.session.user = { loggedUser, id }
+
           console.log(loggedUser);
           console.log("otphi");
           req.session.userLoggedIn = true;
           userSession = req.session.userLoggedIn
 
 
-          res.render('user/user', { userSession })
+          res.redirect('/')
 
 
         } else {
           console.log("otpnothi");
-
-          res.redirect('/otp_verify')
+          otpStatus = false
+          res.render('user/otp-entering', { otpStatus })
         }
 
       }
@@ -142,14 +158,23 @@ module.exports = {
     })
   },
   getShop: async (req, res) => {
+    console.log(req.query.page+"_______________________________________________________");
+    let pageNum=req.query.page 
+    let currentPage=pageNum
+    let perPage=6
     console.log(req.session.user.id);
 
     count = await userhelpers.getCartItemsCount(req.session.user.id)
     viewCategory = await adminHelper.viewAddCategory()
+    documentCount=  await userhelpers.documentCount()
+    console.log(documentCount+"ppppppppppppp");
+    let pages=Math.ceil(parseInt(documentCount) /perPage)
+    console.log(pages+"!!!!!!!!!!!");
 
-    userhelpers.shopListProduct().then((response) => {
-      // console.log(response);
-      res.render('user/shop', { response, userSession, count, viewCategory })
+    userhelpers.shopListProduct(pageNum).then((response) => {
+      console.log(response);
+      
+      res.render('user/shop', { response, userSession, count, viewCategory ,currentPage,documentCount,pages})
     })
 
 
@@ -161,7 +186,7 @@ module.exports = {
     console.log(req.params.id);
     userhelpers.productDetails(req.params.id).then((data) => {
       console.log(data);
-      res.render('user/eachproduct', { data, count })
+      res.render('user/eachproduct', { userSession, data, count })
     })
   },
 
@@ -179,24 +204,24 @@ module.exports = {
 
 
   getViewCart: async (req, res) => {
-    console.log(req);
-    let userId=req.session.user
+    // console.log(req);
+    let userId = req.session.user
     let total = await userhelpers.totalCheckOutAmount(req.session.user.id)
     let count = await userhelpers.getCartItemsCount(req.session.user.id)
 
     let cartItems = await userhelpers.viewCart(req.session.user.id)
     // console.log(cartItems);
 
-    res.render('user/view-cart', { cartItems,userId, userSession, count, total })
+    res.render('user/view-cart', { cartItems, userId, userSession, count, total })
 
   },
   postchangeProductQuantity: async (req, res) => {
     // let count=await userhelpers.getCartItemsCount(req.session.user.id)
     // console.log(req.body);
-    await userhelpers.changeProductQuantity(req.body).then(async(response) => {
+    await userhelpers.changeProductQuantity(req.body).then(async (response) => {
       console.log("hhhhhhhhhhhhhhhhhhhh");
       console.log(response + "controllers");
-    response.total=await userhelpers.totalCheckOutAmount(req.body.user)
+      response.total = await userhelpers.totalCheckOutAmount(req.body.user)
 
       res.json(response)
 
@@ -214,11 +239,94 @@ module.exports = {
     })
   }
   ,
-  getProceedToCheckOut: (req, res) => {
+  checkOutPage:async (req, res) => {
+    
+    let users = req.session.user.id
+    
+   
+      let cartItems =  await userhelpers.viewCart(req.session.user.id)
+      console.log(cartItems);
+      let total = await userhelpers.totalCheckOutAmount(req.session.user.id)
+      userhelpers.checkOutpage(req.session.user.id).then((response)=>{
+      
 
-  },
+        res.render('user/checkout',{users,cartItems,total,response})
+  })
+
+},
+postcheckOutPage:async (req, res) => {
+
+  
+ let total = await userhelpers.totalCheckOutAmount(req.session.user.id)
+let order= await userhelpers.placeOrder(req.body, total).then((response) => {
+          
+        
+         
+
+   if (req.body['payment-method'] == 'COD') {
+     res.json({ codstatus: true })
+
+   } else {
+     userhelpers.generateRazorpay(req.session.user.id, total).then((order) => {
+       console.log(order.id);
+
+       console.log(order.amount);
+       res.json(order)
+
+     })
+   }
+ })
 
 
+},
+postVerifyPayment: (req, res) => {
+  console.log(req.body);
+  userhelpers.verifyPayment(req.body).then(()=>{
+    console.log(req.body);
+   
+    userhelpers.changePaymentStatus(req.session.user.id,req.body['order[receipt]']).then(()=>{
+
+      res.json({status:true})
+
+    }).catch((err)=>{
+ console.log(err);
+ res.json({status:false ,err})
+    })
+
+  })
+
+  
+},
+getOrderPage: (req, res) => {
+  userhelpers.orderPage(req.session.user.id).then((response) => {
+
+    res.render('user/orderslist',{response})
+  })
+
+},
+
+
+
+getAddresspage: async (req, res) => {
+
+   
+  console.log(req.session.user.id);
+
+
+
+  res.render('user/add-address')
+
+},
+postAddresspage:  (req, res) => {
+         
+    
+  userhelpers.postAddress(req.session.user.id,req.body).then(()=>{
+
+  
+    res.redirect('/check_out')
+  })
+
+},
 
 
   getLogout: (req, res) => {
@@ -229,11 +337,4 @@ module.exports = {
 
   },
 
-  // shopProduct:(req,res)=>{
-  //   userhelpers.shopListProduct().then((response)=>{
-  //     console.log(response);
-  //     res.render('user/shop',{response})
-  //   })
-
-  // },
 }

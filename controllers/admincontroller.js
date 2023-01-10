@@ -198,5 +198,34 @@ module.exports = {
 
   },
 
+  getOrders:(req,res)=>{
+    res.render('admin/orders', { layout: "adminLayout", adminStatus})
+  },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  banner: (req, res) => {
+    res.render('admin/banner-management-home', { layout: "adminLayout",adminStatus })
+},
+addBanner: (req, res) => {
+  res.render('admin/addBanner', { layout: "adminLayout",adminStatus })
+},
+
 }
 

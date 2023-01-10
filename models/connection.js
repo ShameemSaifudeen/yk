@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { MessagingConfigurationInstance } = require("twilio/lib/rest/verify/v2/service/messagingConfiguration");
 const db =mongoose 
  .connect("mongodb://0.0.0.0:27017/ecommerce", {
         useNewUrlParser: true,
@@ -92,6 +93,57 @@ const cartSchema = new mongoose.Schema(
 
   }
 )
+const addressSchema=new  mongoose.Schema({
+
+    
+  userid:{
+    type:mongoose.Schema.Types.ObjectId,
+    ref: 'user'
+  },
+  Address:[
+    {
+      fname:{type:String},
+      lname:{type:String},
+      street:{type:String},
+      apartment:{type:String},
+      city:{type:String},
+      state:{type:String},
+      pincode:{type:Number},
+      mobile:{type:Number},
+      email:{type:String}
+    }
+  ]
+
+
+})
+const orderSchema = new mongoose.Schema({
+
+  userid:{
+    type:mongoose.Schema.Types.ObjectId,
+    ref: 'user'
+  },
+  orders: [{
+  
+      
+          name:String,
+          productDetails:Array,
+          paymentMethod: String,
+          paymentStatus: String,
+          totalPrice: Number,
+          totalQuantity: Number,
+          shippingAddress: Object,
+          paymentmode:String,
+          status: {
+              type: Boolean,
+              default: true
+          },
+          createdAt: {
+              type: Date,
+              default: new Date()
+          }
+      }
+  ]
+})
 
 
 //  module.exports=db
@@ -102,6 +154,9 @@ const cartSchema = new mongoose.Schema(
   user:mongoose.model('user',userschema),
   categories:mongoose.model('categories',categorySchema),
   product:mongoose.model('product',productSchema),
-  cart:mongoose.model('cart',cartSchema)
+  cart:mongoose.model('cart',cartSchema),
+  order:mongoose.model('order',orderSchema),
+  address:mongoose.model('address',addressSchema)
+  
  }
 

@@ -41,7 +41,22 @@ router.put('/change_product_quantity', middleware.userSession,controllers.postch
 
 router.delete('/delete_cart_item',middleware.userSession,controllers.getDeleteCart)
 
-router.get('proceed_to_checkout',middleware.userSession,controllers.getProceedToCheckOut)
+
+
+router.get("/check_out",middleware.userSession,controllers.checkOutPage)
+
+
+router.post("/check_out",middleware.userSession,controllers.postcheckOutPage)
+
+router.post('/verify_payment',middleware.userSession,controllers.postVerifyPayment)
+
+router.get('/order',middleware.userSession,controllers.getOrderPage)
+
+
+router.get("/add_address",middleware.userSession,controllers.getAddresspage)
+
+router.post('/add_address',middleware.userSession,controllers.postAddresspage)
+
 
   
 module.exports = router;

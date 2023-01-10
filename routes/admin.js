@@ -45,6 +45,39 @@ router.get("/delete_product/:id",middleware.adminSession,adminController.deleteV
 
 
 
+router.get('/orders',middleware.adminSession,adminController.getOrders)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+router.get('/banners',  adminController.banner)
+
+// router.get('/banner-management',  controllers.bannerPage)
+
+router.get('/add_banner',  adminController.addBanner)
+
+// router.post('/add-banner', controllers.addbannerPost)
+
+// router.get('/edit-banner/:id',controllers.editBannerPage)
+
+// router.post('/edit-banner/:id',controllers.editBannerPost)
+
+// router.delete('/delete-banner/:id',controllers.deleteBanner)
+
+
+
 
 
 
